@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260324-1
+      author: dev
+      changes:
+        - createCollection:
+            collectionName: payments
+
+        - createIndex:
+            collectionName: payments
+            keys: "{order_id: 1}"
+            options: "{unique: true, name: 'idx_payments_order_id'}"
+
+        - createIndex:
+            collectionName: payments
+            keys: "{user_id: 1}"
+            options: "{name: 'idx_payments_user_id'}"
+
+        - createIndex:
+            collectionName: payments
+            keys: "{status: 1, timestamp: -1}"
+            options: "{name: 'idx_payments_status_ts'}"
