@@ -8,9 +8,9 @@ import java.util.List;
 
 public interface PaymentRepository extends MongoRepository<PaymentDocument, String>, PaymentCustomRepository {
 
-  List<PaymentDocument> findByUserId(String userId);
+  List<PaymentDocument> findByUserId(Long userId);
 
-  List<PaymentDocument> findByOrderId(String orderId);
+  List<PaymentDocument> findByOrderId(Long orderId);
 
   List<PaymentDocument> findByStatus(PaymentStatus status);
 }

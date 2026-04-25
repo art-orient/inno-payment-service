@@ -17,41 +17,28 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public BigDecimal getTotalAmountForUser(String userId, Instant from, Instant to) {
-    MatchOperation match = Aggregation.match(
-            Criteria.where("userId").is(userId)
-                    .and("timestamp").gte(from).lte(to)
-    );
-
-    GroupOperation group = Aggregation.group().sum("paymentAmount").as("total");
-
-    Aggregation aggregation = Aggregation.newAggregation(match, group);
-
-    AggregationResults<TotalResult> result =
-            mongoTemplate.aggregate(aggregation, "payments", TotalResult.class);
-
-    TotalResult total = result.getUniqueMappedResult();
-    return total != null ? total.total : BigDecimal.ZERO;
+  public BigDecimal getTotalAmountForUser(Long userId, Instant from, Instant to) {
+    Criteria criteria = Criteria.where("userId").is(userId)
+            .and("timestamp").gte(from).lte(to);
+    return aggregateTotal(criteria);
   }
 
   @Override
   public BigDecimal getTotalAmountForAllUsers(Instant from, Instant to) {
-    MatchOperation match = Aggregation.match(
-            Criteria.where("timestamp").gte(from).lte(to)
-    );
-
-    GroupOperation group = Aggregation.group().sum("paymentAmount").as("total");
-
-    Aggregation aggregation = Aggregation.newAggregation(match, group);
-
-    AggregationResults<TotalResult> result =
-            mongoTemplate.aggregate(aggregation, "payments", TotalResult.class);
-
-    TotalResult total = result.getUniqueMappedResult();
-    return total != null ? total.total : BigDecimal.ZERO;
+    Criteria criteria = Criteria.where("timestamp").gte(from).lte(to);
+    return aggregateTotal(criteria);
   }
 
-  private static class TotalResult {
-    BigDecimal total;
+  private BigDecimal aggregateTotal(Criteria criteria) {
+    MatchOperation match = Aggregation.match(criteria);
+    GroupOperation group = Aggregation.group().sum("paymentAmount").as("totalAmount");
+    Aggregation aggregation = Aggregation.newAggregation(match, group);
+    AggregationResults<TotalResult> result =
+            mongoTemplate.aggregate(aggregation, "payments", TotalResult.class);
+    TotalResult resultObj = result.getUniqueMappedResult();
+    return resultObj != null ? resultObj.totalAmount : BigDecimal.ZERO;
+  }
+
+  private record TotalResult(BigDecimal totalAmount) {
   }
 }
