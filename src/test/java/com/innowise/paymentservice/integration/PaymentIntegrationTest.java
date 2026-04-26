@@ -1,13 +1,13 @@
 package com.innowise.paymentservice.integration;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import com.innowise.paymentservice.model.dto.PaymentEvent;
+import com.innowise.paymentservice.controller.PaymentController;
+import com.innowise.paymentservice.kafka.PaymentEvent;
 import com.innowise.paymentservice.model.dto.PaymentRequestDto;
 import com.innowise.paymentservice.model.dto.PaymentResponseDto;
 import com.innowise.paymentservice.model.entity.PaymentDocument;
 import com.innowise.paymentservice.model.entity.PaymentStatus;
 import com.innowise.paymentservice.repository.PaymentRepository;
-import com.innowise.paymentservice.service.PaymentService;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -61,7 +61,7 @@ class PaymentIntegrationTest {
           WireMockExtension.newInstance().options(wireMockConfig().dynamicPort()).build();
 
   @Autowired
-  private PaymentService paymentService;
+  private PaymentController controller;
 
   @Autowired
   private PaymentRepository paymentRepository;
@@ -82,15 +82,15 @@ class PaymentIntegrationTest {
   @Test
   void createPaymentPersistsSuccessAndPublishesKafkaEvent() {
     WIRE_MOCK.stubFor(get(urlPathEqualTo("/integers/")).willReturn(okJson("[42]")));
-    PaymentResponseDto createdPayment = paymentService.createPayment(
+    PaymentResponseDto response = controller.createPayment(
             new PaymentRequestDto(22L, 1972L, new BigDecimal("22.03")));
-    String paymentId = createdPayment.id();
-    assertThat(createdPayment.status()).isEqualTo(PaymentStatus.SUCCESS);
+    assertThat(response.status()).isEqualTo(PaymentStatus.SUCCESS);
+
+    String paymentId = response.id();
+    assertThat(response.status()).isEqualTo(PaymentStatus.SUCCESS);
 
     Optional<PaymentDocument> saved = paymentRepository.findById(paymentId);
     assertThat(saved).isPresent();
-    assertThat(saved.get().getStatus()).isEqualTo(PaymentStatus.SUCCESS);
-
     PaymentDocument savedPayment = saved.orElseThrow();
     assertThat(savedPayment.getOrderId()).isEqualTo(22L);
     assertThat(savedPayment.getUserId()).isEqualTo(1972L);
@@ -107,7 +107,7 @@ class PaymentIntegrationTest {
   @Test
   void createPaymentPersistsFailedWhenRandomNumberIsOdd() {
     WIRE_MOCK.stubFor(get(urlPathEqualTo("/integers/")).willReturn(okJson("[7]")));
-    PaymentResponseDto createdPayment = paymentService.createPayment(
+    PaymentResponseDto createdPayment = controller.createPayment(
             new PaymentRequestDto(42L, 1975L, new BigDecimal("42.20")));
     String paymentId = createdPayment.id();
     assertThat(createdPayment.status()).isEqualTo(PaymentStatus.FAILED);

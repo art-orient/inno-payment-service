@@ -1,7 +1,7 @@
 package com.innowise.paymentservice.kafka.impl;
 
 import com.innowise.paymentservice.kafka.PaymentProducer;
-import com.innowise.paymentservice.model.dto.PaymentEvent;
+import com.innowise.paymentservice.kafka.PaymentEvent;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 

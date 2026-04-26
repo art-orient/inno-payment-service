@@ -3,7 +3,7 @@ package com.innowise.paymentservice.service.impl;
 import com.innowise.paymentservice.client.RandomNumberClient;
 import com.innowise.paymentservice.kafka.PaymentProducer;
 import com.innowise.paymentservice.mapper.PaymentMapper;
-import com.innowise.paymentservice.model.dto.PaymentEvent;
+import com.innowise.paymentservice.kafka.PaymentEvent;
 import com.innowise.paymentservice.model.dto.PaymentRequestDto;
 import com.innowise.paymentservice.model.dto.PaymentResponseDto;
 import com.innowise.paymentservice.model.dto.PaymentSummaryDto;

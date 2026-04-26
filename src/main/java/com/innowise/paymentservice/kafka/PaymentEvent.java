@@ -1,4 +1,4 @@
-package com.innowise.paymentservice.model.dto;
+package com.innowise.paymentservice.kafka;
 
 import com.innowise.paymentservice.model.entity.PaymentStatus;
 
