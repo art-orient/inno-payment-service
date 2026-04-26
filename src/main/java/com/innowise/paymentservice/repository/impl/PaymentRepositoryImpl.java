@@ -1,6 +1,6 @@
 package com.innowise.paymentservice.repository.impl;
 
-import com.innowise.paymentservice.repository.PaymentCustomRepository;
+import com.innowise.paymentservice.repository.PaymentRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
@@ -12,7 +12,7 @@ import java.time.Instant;
 
 @Repository
 @RequiredArgsConstructor
-public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
+public class PaymentRepositoryImpl implements PaymentRepositoryCustom {
 
   private final MongoTemplate mongoTemplate;
 
