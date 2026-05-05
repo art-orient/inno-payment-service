@@ -10,13 +10,14 @@ public interface RandomNumberClient {
 
   @CircuitBreaker(name = "randomNumberBreaker", fallbackMethod = "getRandomNumberFallback")
   @RequestMapping("${app.external-api.random-number.full-path}")
-  Integer[] getRandomNumber();
+  String getRandomNumberRaw();
 
   default Integer getOne() {
-    return getRandomNumber()[0];
+    String raw = getRandomNumberRaw();
+    return Integer.parseInt(raw.trim());
   }
 
-  default Integer[] getRandomNumberFallback(Exception ex) {
-    return new Integer[]{1};
+  default Integer getRandomNumberFallback(Exception ex) {
+    return 1;
   }
 }

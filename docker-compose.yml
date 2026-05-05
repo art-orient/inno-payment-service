@@ -27,7 +27,7 @@ services:
       - innowise-net
 
   payment-service:
-    build: ./payment-service
+    build: ./inno-payment-service
     container_name: payment-service
     ports:
       - "8083:8083"

@@ -18,7 +18,7 @@ public class PaymentRepositoryImpl implements PaymentRepositoryCustom {
 
   @Override
   public BigDecimal getTotalAmountForUser(Long userId, Instant from, Instant to) {
-    Criteria criteria = Criteria.where("userId").is(userId)
+    Criteria criteria = Criteria.where("user_id").is(userId)
             .and("timestamp").gte(from).lte(to);
     return aggregateTotal(criteria);
   }
@@ -31,7 +31,7 @@ public class PaymentRepositoryImpl implements PaymentRepositoryCustom {
 
   private BigDecimal aggregateTotal(Criteria criteria) {
     MatchOperation match = Aggregation.match(criteria);
-    GroupOperation group = Aggregation.group().sum("paymentAmount").as("totalAmount");
+    GroupOperation group = Aggregation.group().sum("payment_amount").as("totalAmount");
     Aggregation aggregation = Aggregation.newAggregation(match, group);
     AggregationResults<TotalResult> result =
             mongoTemplate.aggregate(aggregation, "payments", TotalResult.class);
