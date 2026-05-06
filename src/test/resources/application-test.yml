@@ -1,0 +1,16 @@
+spring:
+  kafka:
+    bootstrap-servers: placeholder
+    consumer:
+      group-id: test-group
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      transaction-id-prefix: tx-
+      properties:
+        enable.idempotence: true
+        acks: all
+
+app:
+  random-api:
+    url: "http://localhost:8089"

@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: payment-service
+
+  mongodb:
+    uri: mongodb://mongo:27017/payment_db
+
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+
+  kafka:
+    bootstrap-servers: kafka:9092
+
+server:
+  port: 8083
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
