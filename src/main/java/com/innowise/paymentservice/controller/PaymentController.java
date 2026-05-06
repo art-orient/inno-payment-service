@@ -1,17 +1,20 @@
 package com.innowise.paymentservice.controller;
 
+import com.innowise.paymentservice.model.dto.PaymentFilterDto;
 import com.innowise.paymentservice.model.dto.PaymentRequestDto;
 import com.innowise.paymentservice.model.dto.PaymentResponseDto;
 import com.innowise.paymentservice.model.dto.PaymentSummaryDto;
-import com.innowise.paymentservice.model.entity.PaymentStatus;
 import com.innowise.paymentservice.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -34,67 +37,85 @@ public class PaymentController {
   }
 
   /**
-   * Retrieves all payments for a specific user.
+   * Retrieves payments using exactly one filter criterion.
+   * <p>
+   * According to the assignment requirements, a payment search must be performed
+   * by only one of the following fields: {@code userId}, {@code orderId}, or {@code status}.
+   * This method enforces that rule by validating the {@link PaymentFilterDto} and delegating
+   * the request to the appropriate service method based on which field is provided.
+   * </p>
    *
-   * @param userId user identifier
-   * @return list of payments
+   * <p>
+   * If more than one filter is provided, or if none are provided, the method throws
+   * {@link IllegalArgumentException}, ensuring strict adherence to the single-filter contract.
+   * </p>
+   *
+   * @param filter DTO containing exactly one non-null filter parameter
+   * @return list of payments matching the selected filter
+   * @throws IllegalArgumentException if zero or more than one filter field is provided
    */
-  @GetMapping("/user/{userId}")
-  public List<PaymentResponseDto> getPaymentsByUserId(@PathVariable Long userId) {
-    return paymentService.getPaymentsByUserId(userId);
+  @GetMapping("/search")
+  public List<PaymentResponseDto> searchPayments(@Valid PaymentFilterDto filter) {
+    int count = 0;
+    if (filter.userId() != null) count++;
+    if (filter.orderId() != null) count++;
+    if (filter.status() != null) count++;
+    if (count != 1) {
+      throw new IllegalArgumentException("Exactly one filter must be provided");
+    }
+
+    List<PaymentResponseDto> result = new ArrayList<>();
+    if (filter.userId() != null) {
+      result = paymentService.getPaymentsByUserId(filter.userId());
+    } else if (filter.orderId() != null) {
+      result = paymentService.getPaymentsByOrderId(filter.orderId());
+    } else if (filter.status() != null) {
+      result = paymentService.getPaymentsByStatus(filter.status());
+    }
+    return result;
   }
 
   /**
-   * Retrieves all payments for a specific order.
+   * Returns the total payment amount for the currently authenticated user
+   * within the specified time interval.
+   * <p>
+   * The user identifier is obtained from the authenticated security principal
+   * (set by the JWT authentication filter); the endpoint does not accept an
+   * explicit userId parameter.
+   * </p>
    *
-   * @param orderId order identifier
-   * @return list of payments
+   * @param authentication the Spring Security authentication containing the current user's ID as principal
+   * @param from start of the time interval (inclusive)
+   * @param to end of the time interval (inclusive)
+   * @return aggregated payment summary for the current user in the given interval
    */
-  @GetMapping("/order/{orderId}")
-  public List<PaymentResponseDto> getPaymentsByOrderId(@PathVariable Long orderId) {
-    return paymentService.getPaymentsByOrderId(orderId);
-  }
-
-  /**
-   * Retrieves all payments with the specified status.
-   *
-   * @param status payment status
-   * @return list of payments
-   */
-  @GetMapping("/status/{status}")
-  public List<PaymentResponseDto> getPaymentsByStatus(@PathVariable PaymentStatus status) {
-    return paymentService.getPaymentsByStatus(status);
-  }
-
-  /**
-   * Calculates total payment amount for a specific user within a time range.
-   *
-   * @param userId user identifier
-   * @param from   start timestamp
-   * @param to     end timestamp
-   * @return summary DTO with total amount
-   */
-  @GetMapping("/summary/users/{userId}")
-  public PaymentSummaryDto getTotalForUser(
-          @PathVariable Long userId,
+  @GetMapping("/summary/user")
+  @PreAuthorize("isAuthenticated()")
+  public PaymentSummaryDto getTotalSumForCurrentUser(
+          Authentication authentication,
           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
-          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to
-  ) {
-    return paymentService.getTotalForUser(userId, from, to);
+          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to) {
+    Long currentUserId = (Long) authentication.getPrincipal();
+    return paymentService.getTotalForUser(currentUserId, from, to);
   }
 
   /**
-   * Calculates total payment amount for all users within a time range.
+   * Returns the total payment amount aggregated across all users
+   * within the specified time interval.
+   * <p>
+   * Access to this endpoint is restricted to callers with the ADMIN role,
+   * enforced via method-level security.
+   * </p>
    *
-   * @param from start timestamp
-   * @param to   end timestamp
-   * @return summary DTO with total amount
+   * @param from start of the time interval (inclusive)
+   * @param to end of the time interval (inclusive)
+   * @return aggregated payment summary across all users in the given interval
    */
   @GetMapping("/summary/all")
-  public PaymentSummaryDto getTotalForAllUsers(
+  @PreAuthorize("hasRole('ADMIN')")
+  public PaymentSummaryDto getTotalSumForAllUsers(
           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
-          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to
-  ) {
+          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to) {
     return paymentService.getTotalForAllUsers(from, to);
   }
 }

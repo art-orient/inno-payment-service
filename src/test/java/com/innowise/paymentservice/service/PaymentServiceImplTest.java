@@ -8,6 +8,7 @@ import com.innowise.paymentservice.model.dto.PaymentResponseDto;
 import com.innowise.paymentservice.model.dto.PaymentSummaryDto;
 import com.innowise.paymentservice.model.entity.PaymentDocument;
 import com.innowise.paymentservice.model.entity.PaymentStatus;
+import com.innowise.paymentservice.ourbox.PaymentOutboxRepository;
 import com.innowise.paymentservice.repository.PaymentRepository;
 import com.innowise.paymentservice.repository.PaymentRepositoryCustom;
 import com.innowise.paymentservice.service.impl.PaymentServiceImpl;
@@ -41,6 +42,9 @@ class PaymentServiceImplTest {
   @Mock
   private RandomNumberClient randomNumberClient;
 
+  @Mock
+  private PaymentOutboxRepository outboxRepository;
+
   @InjectMocks
   private PaymentServiceImpl paymentService;
 
@@ -69,10 +73,12 @@ class PaymentServiceImplTest {
     assertThat(result.status()).isEqualTo(PaymentStatus.SUCCESS);
     verify(randomNumberClient).getOne();
     verify(paymentRepository).save(mapped);
-    verify(paymentProducer).sendPaymentEvent(argThat(event ->
-                    event.orderId().equals(1L)
-                            && event.paymentId().equals("p1")
-                            && event.status() == PaymentStatus.SUCCESS));
+    verify(paymentProducer, never()).sendPaymentEvent(any());
+    verify(outboxRepository).save(argThat(outbox ->
+            outbox.getEvent().orderId().equals(1L)
+                    && outbox.getEvent().paymentId().equals("p1")
+                    && outbox.getEvent().status() == PaymentStatus.SUCCESS
+    ));
   }
 
   @Test

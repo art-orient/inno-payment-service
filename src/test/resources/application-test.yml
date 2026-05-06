@@ -6,6 +6,10 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      transaction-id-prefix: tx-
+      properties:
+        enable.idempotence: true
+        acks: all
 
 app:
   random-api:

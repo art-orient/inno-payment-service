@@ -1,9 +1,10 @@
 package com.innowise.paymentservice.model.dto;
 
 import com.innowise.paymentservice.model.entity.PaymentStatus;
+import jakarta.annotation.Nullable;
 
 public record PaymentFilterDto(
-        Long userId,
-        Long orderId,
-        PaymentStatus status
-) {}
+        @Nullable Long userId,
+        @Nullable Long orderId,
+        @Nullable PaymentStatus status) {
+}

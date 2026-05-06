@@ -1,5 +1,6 @@
 package com.innowise.paymentservice.repository.impl;
 
+import com.innowise.paymentservice.model.entity.PaymentStatus;
 import com.innowise.paymentservice.repository.PaymentRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -25,7 +26,8 @@ public class PaymentRepositoryImpl implements PaymentRepositoryCustom {
 
   @Override
   public BigDecimal getTotalAmountForAllUsers(Instant from, Instant to) {
-    Criteria criteria = Criteria.where("timestamp").gte(from).lte(to);
+    Criteria criteria = Criteria.where("timestamp").gte(from).lte(to)
+            .and("status").is(PaymentStatus.SUCCESS);
     return aggregateTotal(criteria);
   }
 
